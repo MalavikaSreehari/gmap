@@ -13,7 +13,7 @@ class AssistantMethods {
 
     String url =
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$mapKey";
-
+    print(url);
     var response = await RequestAssistant.getRequest(url);
 
     if (response != "failed") {
@@ -41,7 +41,7 @@ class AssistantMethods {
   static Future<DirectionDetails?> obtainPlaceDirectionDetails(
       LatLng initialPosition, LatLng finalPosition) async {
     String directionUrl =
-        "https://maps.googleapis.com/maps/api/directions/json?destination=${finalPosition.latitude},${finalPosition.longitude}&origin=${initialPosition.latitude},${initialPosition.longitude}&key=$mapKey";
+        "https://maps.googleapis.com/maps/api/directions/json?destination=${finalPosition.latitude},${finalPosition.longitude}&origin=${initialPosition.latitude},${initialPosition.longitude}&key=$placesKey";
 
     var res = await RequestAssistant.getRequest(directionUrl);
 

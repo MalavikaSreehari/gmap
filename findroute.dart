@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:farespy/Assistants/asst_methods.dart';
+import 'package:farespy/Assistants/net_utility.dart';
 import 'package:farespy/DataHandler/app_data.dart';
 import 'package:farespy/Models/direction_details.dart';
 import 'package:farespy/divider_widget.dart';
+import 'package:farespy/global/config_maps.dart';
+import 'package:farespy/paymentone.dart';
 import 'package:farespy/search_page.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -11,18 +14,29 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({Key? key}) : super(key: key);
-  static const String idScreen = "mapScreen";
+class FindRoute extends StatefulWidget {
+  const FindRoute({Key? key}) : super(key: key);
+  static const String idScreen = "FindRoute";
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<FindRoute> createState() => _FindRouteState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _FindRouteState extends State<FindRoute> {
+  @override
+  void initState() {
+    super.initState();
+    //AssistantMethods.searchCoordinateAddress(Position(longitude: 321, latitude: 141, timestamp: timestamp, accuracy: accuracy, altitude: altitude, heading: heading, speed: speed, speedAccuracy: speedAccuracy),context);
+    // Perform initialization tasks here
+    // For example: initializing variables, subscribing to data streams, etc.
+  }
   final Completer<GoogleMapController> _controllerGoogleMap =
       Completer<GoogleMapController>();
   late GoogleMapController newGoogleMapController;
+  TextEditingController pickupController = TextEditingController();
+TextEditingController destinationController = TextEditingController();
+ 
+
 
   GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
   //DirectionDetails tripDirectionDetails;
@@ -128,8 +142,29 @@ class _MapScreenState extends State<MapScreen> {
     zoom: 14.4746,
   );
 
+  void placeAutoComplete(String query) async{
+    final endpoint =
+      'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+
+  final uri = Uri.parse(endpoint).replace(queryParameters: {
+    'input': query,
+    'key': placesKey,
+  });
+
+    String? response = await NetworkUtility.fetchUrl(uri);
+
+    if(response != null){
+      print(response);
+    }
+  }
+
+  
+
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    double screenWidth = MediaQuery.of(context).size.width;
     return MaterialApp(
       
       debugShowCheckedModeBanner: false,
@@ -174,164 +209,154 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
         ),
-        body: Stack(
-          children: [
-            GoogleMap(
-              mapType: MapType.normal,
-              myLocationButtonEnabled: false,
-              onMapCreated: (GoogleMapController controller) {
-                _controllerGoogleMap.complete(controller);
-                newGoogleMapController = controller;
-                // locatePosition();
-              },
-              initialCameraPosition: _kGooglePlex,
-              myLocationEnabled: true,
-              zoomControlsEnabled: false,
-              zoomGesturesEnabled: true,
-              polylines: polylineSet,
-              markers: markersSet,
-              circles: circlesSet,
-            ),
-
-            Positioned(
-              top: 45.0,
-              left:22.0,
-              child: GestureDetector(
-                onTap: () {
-                  scaffoldKey.currentState?.openDrawer();
-
+        body: Container(
+          height: double.maxFinite,
+          child: Stack(
+            children: [
+              GoogleMap(
+                mapType: MapType.normal,
+                myLocationButtonEnabled: false,
+                onMapCreated: (GoogleMapController controller) {
+                  _controllerGoogleMap.complete(controller);
+                  newGoogleMapController = controller;
+                  // locatePosition();
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(22.0),
-                    boxShadow: [
-                            BoxShadow(
-                                color: Colors.black,
-                                blurRadius: 6.0,
-                                spreadRadius: 0.5,
-                                offset: Offset(0.7, 0.7)),]
-                  ),
-                  child: CircleAvatar(backgroundColor: Colors.white,
-                  child: Icon(Icons.menu,color: Colors.black,),
-                  radius: 20.0,
-                  
-                ),
-                          ),
-              ),),
-
-            Positioned(
-                
-                bottom: 0.0,
-                left: 0.0,
-                right: 0.0,
-                child: Container(
-                  height: 320.0,
-                  decoration: BoxDecoration(
+                initialCameraPosition: _kGooglePlex,
+                myLocationEnabled: true,
+                zoomControlsEnabled: false,
+                zoomGesturesEnabled: true,
+                polylines: polylineSet,
+                markers: markersSet,
+                circles: circlesSet,
+              ),
+        
+              Positioned(
+                top: 45.0,
+                left:22.0,
+                child: GestureDetector(
+                  onTap: () {
+                    scaffoldKey.currentState?.openDrawer();
+                    
+        
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(18.0),
-                          topRight: Radius.circular(18.0)),
+                      borderRadius: BorderRadius.circular(22.0),
                       boxShadow: [
-                        BoxShadow(
-                            color: Colors.black,
-                            blurRadius: 6.0,
-                            spreadRadius: 0.5,
-                            offset: Offset(0.7, 0.7)),
-                      ]),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0, vertical: 18.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: 6.0,
-                        ),
-                        Text("Hi"),
-                        Text("Where to?"),
-                        SizedBox(
-                          height: 20.0,
-                        ),
-                        GestureDetector(
-                          onTap: () async{
-                            var res = Navigator.push(context, MaterialPageRoute(builder: (context)=> SearchPage()));
-
-                            if(res == "obtainDirection"){
-                              await getPlaceDirection;
-                            }
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(5.0),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: Colors.black54,
-                                      blurRadius: 16.0,
-                                      spreadRadius: 0.5,
-                                      offset: Offset(0.7, 0.7)),
-                                ]),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(children: [
-                                Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(
-                                  width: 10.0,
-                                ),
-                                Text("Search Drop off")
-                              ]),
+                              BoxShadow(
+                                  color: Colors.black,
+                                  blurRadius: 6.0,
+                                  spreadRadius: 0.5,
+                                  offset: Offset(0.7, 0.7)),]
+                    ),
+                    child: CircleAvatar(backgroundColor: Colors.white,
+                    child: Icon(Icons.menu,color: Colors.black,),
+                    radius: 20.0,
+                    
+                  ),
                             ),
-                          ),
-                        ),
-                        SizedBox(height: 24.0,),
-                        Row(children: [
-                          Icon(Icons.home,color: Colors.grey,),
-                          SizedBox(width: 12.0,),
-                          Column(crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(Provider.of<AppData>(context).pickUpLocation != null 
-                            ? Provider.of<AppData>(context).pickUpLocation!.placeName
-                            : "Add Home"),
-                            SizedBox(height: 4.0,),
-                            Text("Your living home address"),
-
-                          ],),
-                        ],),
-                        SizedBox(height: 10.0,),
-                        DividerWidget(),
-                        SizedBox(height: 16.0,),
-                        Row(children: [
-                          Icon(Icons.work,color: Colors.grey,),
-                          SizedBox(width: 12.0,),
-                          Column(crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Add Work"),
-                            SizedBox(height: 4.0,),
-                            Text("Your office address"),
-                            
-                          ],),
-                        ],),
-                      ],
+                ),),
+        
+        
+                
+            Positioned(
+              height: 170,
+              width:screenWidth - 40.0,
+              top: 100.0,
+              left: 20.0,
+              child: GestureDetector(
+          onTap: () async {
+            pickupController.text = "Pickup location";
+            destinationController.text = "Destination";
+          },
+          child: Container(
+            height: 500,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(5.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black54,
+                  blurRadius: 16.0,
+                  spreadRadius: 0.5,
+                  offset: Offset(0.7, 0.7),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                //crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: pickupController,
+                    decoration: InputDecoration(
+                      labelText: "Pickup location",
+                      prefixIcon: Icon(Icons.location_on),
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                )),
-            Positioned(
-              bottom: 16.0,
-              right: 16.0,
-              child: FloatingActionButton(
-                onPressed: locatePosition,
-                backgroundColor: Colors.white,
-                child: Icon(
-                  Icons.my_location,
-                  color: Colors.blue,
-                ),
+                  SizedBox(height: 10.0),
+                  TextFormField(
+                    controller: destinationController,
+                    decoration: InputDecoration(
+                      
+                      labelText: "Destination",
+                      prefixIcon: Icon(Icons.location_on),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  
+                ],
               ),
             ),
-          ],
+          ),
+              ),
+            ),
+
+            Positioned(
+              top: 300,
+              left: 20,
+            child: ElevatedButton(onPressed: (){
+                      placeAutoComplete("Dubai");
+                    }, child: Text("Autocomplete address")),),
+            
+        
+        
+              Positioned(
+                bottom: 16.0,
+                right: 16.0,
+                child: FloatingActionButton(
+                  onPressed: locatePosition,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.my_location,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+
+              Positioned(
+                bottom: 16.0,
+                left: 16.0,
+                height: 40,
+                width: 110,
+
+                child: ElevatedButton(onPressed: (){
+                  Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PaymentOne()),
+                        );
+
+                },style: ElevatedButton.styleFrom(backgroundColor: Color(0xff93C561)),
+                 child: Text("Get Fare",style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          //fontWeight: FontWeight.bold,
+                        ),),),)
+            ],
+          ),
         ),
       ),
     );

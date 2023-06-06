@@ -126,7 +126,7 @@ class _SearchPageState extends State<SearchPage> {
 
   void findPlace(String placeName) async{
     if (placeName.length > 1){
-      String autocompleteUrl = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$placeName&key=$mapKey&sessiontoken=1234567890&components=country:in";
+      String autocompleteUrl = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$placeName&key=$placesKey&sessiontoken=1234567890&components=country:in";
       var res = await RequestAssistant.getRequest(autocompleteUrl);
 
       if(res == "failed"){
@@ -192,7 +192,7 @@ class PredictionTile extends StatelessWidget {
   void getPlaceAddressDetails(String placeId, context) async{
 
     //showDialog(context: context, builder: (BuildContext context) => ProgressDialog(message: "Setting Drop off, Please wait..."));
-    String placeDetailsUrl = "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$mapKey";
+    String placeDetailsUrl = "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$placesKey";
 
     var res = await RequestAssistant.getRequest(placeDetailsUrl);
 
