@@ -7,12 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
+
+
 class Login extends StatelessWidget {
   static const String idScreen = "login";
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController passwordTextEditingController = TextEditingController();
   Login({Key? key}) : super(key: key);
+  
+  get usersRef => null;
 
   @override
   Widget build(BuildContext context) {

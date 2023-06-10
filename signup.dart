@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:email_validator/email_validator.dart';
 
 
+// ignore: must_be_immutable
 class SignUp extends StatelessWidget {
   static const String idScreen = "signUp";
   final _formKey = GlobalKey<FormState>();
@@ -20,6 +21,8 @@ class SignUp extends StatelessWidget {
 
 
   SignUp({Key? key}) : super(key: key);
+  
+  get usersRef => null;
 
   @override
   Widget build(BuildContext context) {

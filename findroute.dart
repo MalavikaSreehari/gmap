@@ -8,11 +8,14 @@ import 'package:farespy/divider_widget.dart';
 import 'package:farespy/global/config_maps.dart';
 import 'package:farespy/paymentone.dart';
 import 'package:farespy/search_page.dart';
+import 'package:farespy/show_direction.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_place/google_place.dart';
 import 'package:provider/provider.dart';
+
 
 class FindRoute extends StatefulWidget {
   const FindRoute({Key? key}) : super(key: key);
@@ -23,12 +26,34 @@ class FindRoute extends StatefulWidget {
 }
 
 class _FindRouteState extends State<FindRoute> {
+
+  late GooglePlace googlePlace;
+  List<AutocompletePrediction> predictions = [];
+  Timer? _debounce;
+  bool _isTyping = false;
+
+  DetailsResult? startPoint;
+  DetailsResult? endPoint;
+
+  FocusNode? startFocusNode;
+  FocusNode? endFocusNode;
+
+
+
   @override
   void initState() {
     super.initState();
-    //AssistantMethods.searchCoordinateAddress(Position(longitude: 321, latitude: 141, timestamp: timestamp, accuracy: accuracy, altitude: altitude, heading: heading, speed: speed, speedAccuracy: speedAccuracy),context);
-    // Perform initialization tasks here
-    // For example: initializing variables, subscribing to data streams, etc.
+    googlePlace = GooglePlace(placesKey);
+
+    startFocusNode = FocusNode();
+    endFocusNode = FocusNode();
+    
+  }
+
+  void dispose(){
+    super.dispose();
+    startFocusNode!.dispose();
+    endFocusNode!.dispose();
   }
   final Completer<GoogleMapController> _controllerGoogleMap =
       Completer<GoogleMapController>();
@@ -47,8 +72,10 @@ TextEditingController destinationController = TextEditingController();
   late Position currentPosition;
   var geolocator = Geolocator();
 
-  Set<Marker> markersSet = {};
-  Set<Circle> circlesSet = {};
+  // Set<Marker> markersSet = {};
+  // Set<Circle> circlesSet = {};
+   
+  
 
   void locatePosition() async {
     bool serviceEnabled;
@@ -142,19 +169,30 @@ TextEditingController destinationController = TextEditingController();
     zoom: 14.4746,
   );
 
-  void placeAutoComplete(String query) async{
-    final endpoint =
-      'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+  // void placeAutoComplete(String query) async{
+  //   final endpoint =
+  //     'https://maps.googleapis.com/maps/api/place/autocomplete/json';
 
-  final uri = Uri.parse(endpoint).replace(queryParameters: {
-    'input': query,
-    'key': placesKey,
-  });
+  // final uri = Uri.parse(endpoint).replace(queryParameters: {
+  //   'input': query,
+  //   'key': placesKey,
+  // });
 
-    String? response = await NetworkUtility.fetchUrl(uri);
+  //   String? response = await NetworkUtility.fetchUrl(uri);
 
-    if(response != null){
-      print(response);
+  //   if(response != null){
+  //     print(response);
+  //   }
+  // }
+
+  void autoCompleteSearch(String value) async{
+    var result = await googlePlace.autocomplete.get(value);
+    if(result != null && result.predictions != null && mounted){
+      print(result.predictions!.first.description);
+      setState(() {
+        predictions = result.predictions!;
+      });
+
     }
   }
 
@@ -226,8 +264,8 @@ TextEditingController destinationController = TextEditingController();
                 zoomControlsEnabled: false,
                 zoomGesturesEnabled: true,
                 polylines: polylineSet,
-                markers: markersSet,
-                circles: circlesSet,
+                
+                // circles: circlesSet,
               ),
         
               Positioned(
@@ -261,66 +299,198 @@ TextEditingController destinationController = TextEditingController();
         
                 
             Positioned(
-              height: 170,
-              width:screenWidth - 40.0,
+              height: screenHeight - 200,
+              width:screenWidth ,
               top: 100.0,
-              left: 20.0,
+              left: 0.0,
               child: GestureDetector(
           onTap: () async {
-            pickupController.text = "Pickup location";
-            destinationController.text = "Destination";
+            pickupController.text = "";
+            destinationController.text = "";
           },
           child: Container(
-            height: 500,
+            
+            //height: 170,
+            width: screenWidth,
             decoration: BoxDecoration(
-              color: Colors.white,
+              //color: Colors.white,
               borderRadius: BorderRadius.circular(5.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 16.0,
-                  spreadRadius: 0.5,
-                  offset: Offset(0.7, 0.7),
-                ),
-              ],
+              // boxShadow: [
+              //   BoxShadow(
+              //     color: Colors.black54,
+              //     blurRadius: 16.0,
+              //     spreadRadius: 0.5,
+              //     offset: Offset(0.7, 0.7),
+              //   ),
+              // ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                //crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextFormField(
-                    controller: pickupController,
-                    decoration: InputDecoration(
-                      labelText: "Pickup location",
-                      prefixIcon: Icon(Icons.location_on),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 10.0),
-                  TextFormField(
-                    controller: destinationController,
-                    decoration: InputDecoration(
-                      
-                      labelText: "Destination",
-                      prefixIcon: Icon(Icons.location_on),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
+            child: Column(
+              //crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 160,
+                  color: Colors.white,
+                  width: screenWidth,
                   
-                ],
-              ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        TextFormField(
+                          
+                          focusNode: startFocusNode,
+                          controller: pickupController,
+                          decoration: InputDecoration(
+                            fillColor: Colors.white,
+                            hintText: "Pickup",
+                            prefixIcon: Icon(Icons.location_on),
+                            border: OutlineInputBorder(),
+                            suffixIcon: pickupController.text.isNotEmpty? IconButton(onPressed: () {
+                              setState(() {
+                                predictions=[];
+
+                                pickupController.clear();
+                              });
+                            }, icon: Icon(Icons.clear)): null
+                          ),
+                          onTap: () {
+                            _isTyping = true;
+                          },
+                          onChanged: (value) {
+                            
+                              if(value.isNotEmpty){
+                              autoCompleteSearch(value);
+                            
+                            }
+                            else{
+                              setState(() {
+                                predictions=[];
+                                startPoint = null;
+                              });
+                            
+                            }
+                            
+                            
+                          },
+                        ),
+                        SizedBox(height: 10.0),
+                    TextFormField(
+                      focusNode: endFocusNode,
+                      controller: destinationController,
+                      enabled: pickupController.text.isNotEmpty && startPoint!=null,
+                      decoration: InputDecoration(
+                        fillColor: Colors.white,
+                        hintText: "Destination",
+                        prefixIcon: Icon(Icons.location_on),
+                        border: OutlineInputBorder(),
+                        suffixIcon: destinationController.text.isNotEmpty? IconButton(onPressed: () {
+                              setState(() {
+                                predictions=[];
+                                
+                                destinationController.clear();
+                              });
+                            }, icon: Icon(Icons.clear)): null
+                      ),
+                      onTap: () {
+                        _isTyping = true;
+                      },
+                      onChanged: (value) {
+                        
+                          if(value.isNotEmpty){
+                          autoCompleteSearch(value);
+                            
+                        }
+                        else{
+                          setState(() {
+                            predictions=[];
+                            endPoint = null;
+                          });
+                            
+                        }
+                            
+                        
+                        
+                      },
+                    ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                
+                AnimatedContainer(
+                  //height: predictions!=[]? 300 : 0,
+                  color: predictions!=[]? Colors.white : Colors.transparent,
+                  duration: Duration(milliseconds: 300),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: predictions.length,
+                    itemBuilder: (context,index){
+                    return ListTile(
+                      leading: Icon(Icons.pin_drop,color: Colors.grey,),
+                      title: Text(predictions[index].description.toString()),
+                      onTap: () async{
+                        final placeId = predictions[index].placeId!;
+                        final details = await  googlePlace.details.get(placeId);
+                        if(details != null && details.result != null && mounted){
+                          if(startFocusNode!.hasFocus){
+                            setState(() {
+                              startPoint = details.result;
+                              pickupController.text = details.result!.name!;
+                              predictions = [];
+                            });
+                          }
+                          else{
+                            setState(() {
+                              endPoint = details.result;
+                              destinationController.text = details.result!.name!;
+                              predictions = [];
+                            });
+                          
+                          }
+                          if(startPoint!=null && endPoint!=null){
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=> ShowDirection(startPoint: startPoint,endPoint: endPoint)));
+                          }
+                        }
+                      },
+                    );
+                  }),
+                ),
+                // ListView.builder(
+                //   shrinkWrap: true,
+                //   itemCount: predictions.length,
+                //   itemBuilder: (context,index){
+                //   return ListTile(
+                //     leading: Icon(Icons.pin_drop,color: Colors.grey,),
+                //     title: Text(predictions[index].description.toString()),
+                //     onTap: () async{
+                //       final placeId = predictions[index].placeId!;
+                //       final details = await  googlePlace.details.get(placeId);
+                //       if(details != null && details.result != null && mounted){
+                //         if(endFocusNode!.hasFocus){
+                //           setState(() {
+                //             endPoint = details.result;
+                //             destinationController.text = details.result!.name!;
+                //           });
+                //         }
+                //       }
+                //     },
+                //   );
+                // }),
+                
+              ],
             ),
           ),
               ),
             ),
 
-            Positioned(
-              top: 300,
-              left: 20,
-            child: ElevatedButton(onPressed: (){
-                      placeAutoComplete("Dubai");
-                    }, child: Text("Autocomplete address")),),
+            // Positioned(
+            //   top: 300,
+            //   left: 20,
+            // child: ElevatedButton(onPressed: (){
+            //           placeAutoComplete("Dubai");
+            //         }, child: Text("Autocomplete address")),),
             
         
         
@@ -337,24 +507,24 @@ TextEditingController destinationController = TextEditingController();
                 ),
               ),
 
-              Positioned(
-                bottom: 16.0,
-                left: 16.0,
-                height: 40,
-                width: 110,
+              // Positioned(
+              //   bottom: 16.0,
+              //   left: 16.0,
+              //   height: 40,
+              //   width: 110,
 
-                child: ElevatedButton(onPressed: (){
-                  Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => PaymentOne()),
-                        );
+              //   child: ElevatedButton(onPressed: (){
+              //     Navigator.push(
+              //             context,
+              //             MaterialPageRoute(builder: (context) => PaymentOne()),
+              //           );
 
-                },style: ElevatedButton.styleFrom(backgroundColor: Color(0xff93C561)),
-                 child: Text("Get Fare",style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          //fontWeight: FontWeight.bold,
-                        ),),),)
+              //   },style: ElevatedButton.styleFrom(backgroundColor: Color(0xff93C561)),
+              //    child: Text("Get Fare",style: TextStyle(
+              //             color: Colors.white,
+              //             fontSize: 18,
+              //             //fontWeight: FontWeight.bold,
+              //           ),),),)
             ],
           ),
         ),
@@ -422,43 +592,47 @@ TextEditingController destinationController = TextEditingController();
 
     newGoogleMapController.animateCamera(CameraUpdate.newLatLngBounds(latLngBounds, 70));
 
-    Marker pickUpLocMarker = Marker(
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
-      infoWindow: InfoWindow(title: initialPos.placeName, snippet: "my location"),
-      position: pickUpLatLng,
-      markerId: MarkerId("pickUpId"));
+    // Marker pickUpLocMarker = Marker(
+    //   icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
+    //   infoWindow: InfoWindow(title: initialPos.placeName, snippet: "my location"),
+    //   position: pickUpLatLng,
+    //   markerId: MarkerId("pickUpId"));
 
-    Marker dropOffLocMarker = Marker(
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      infoWindow: InfoWindow(title: finalPos.placeName, snippet: "Dropoff location"),
-      position: dropOffLatLng,
-      markerId: MarkerId("dropOffId"));
+    // Marker dropOffLocMarker = Marker(
+    //   icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    //   infoWindow: InfoWindow(title: finalPos.placeName, snippet: "Dropoff location"),
+    //   position: dropOffLatLng,
+    //   markerId: MarkerId("dropOffId"));
 
-    setState(() {
-      markersSet.add(pickUpLocMarker);
-      markersSet.add(dropOffLocMarker);
-    });
+    // setState(() {
+    //   markersSet.add(pickUpLocMarker);
+    //   markersSet.add(dropOffLocMarker);
+    // });
 
-    Circle pickUpLocCircle = Circle(
-      fillColor: Colors.blueAccent,
-      center: pickUpLatLng,
-      radius: 12,
-      strokeWidth: 4,
-      strokeColor: Colors.blueAccent,
-      circleId: CircleId("pickUpId"));
+    // Circle pickUpLocCircle = Circle(
+    //   fillColor: Colors.blueAccent,
+    //   center: pickUpLatLng,
+    //   radius: 12,
+    //   strokeWidth: 4,
+    //   strokeColor: Colors.blueAccent,
+    //   circleId: CircleId("pickUpId"));
     
-    Circle dropOffLocCircle = Circle(
-      fillColor: Colors.blueAccent,
-      center: dropOffLatLng,
-      radius: 12,
-      strokeWidth: 4,
-      strokeColor: Colors.blueAccent,
-      circleId: CircleId("dropOffId"));
+    // Circle dropOffLocCircle = Circle(
+    //   fillColor: Colors.blueAccent,
+    //   center: dropOffLatLng,
+    //   radius: 12,
+    //   strokeWidth: 4,
+    //   strokeColor: Colors.blueAccent,
+    //   circleId: CircleId("dropOffId"));
 
-    setState(() {
-      circlesSet.add(pickUpLocCircle);
-      circlesSet.add(dropOffLocCircle);
-    });
+    // setState(() {
+    //   circlesSet.add(pickUpLocCircle);
+    //   circlesSet.add(dropOffLocCircle);
+    // });
+
+   
+
+  
 
 
 

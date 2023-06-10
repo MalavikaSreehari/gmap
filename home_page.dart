@@ -1,5 +1,6 @@
 import 'package:farespy/findroute.dart';
 import 'package:farespy/map.dart';
+import 'package:farespy/paymentone.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatelessWidget {
@@ -28,7 +29,10 @@ class HomePage extends StatelessWidget {
               children: [
                  TextButton(
                           onPressed: () {
-                        
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => (PaymentOne())),
+                        );
                       }, child: Column(
                         children: [
                           Container(
@@ -51,13 +55,22 @@ class HomePage extends StatelessWidget {
                       ]
                     ),
                     child: 
-                        Center(
-                          child: Text(
-                            'Start Ride',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Color(0xFF258EAB)
-                            ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Image.asset('assets/images/getfare.png'),
+                              //SizedBox(height: 20,),
+                              Text(
+                                'Get Fare',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Color(0xFF258EAB)
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         
@@ -96,14 +109,18 @@ class HomePage extends StatelessWidget {
                           MaterialPageRoute(builder: (context) => (FindRoute())),
                         );
                       }, child: 
-                          Center(
-                            child: Text(
-                            'Find Route',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Color(0xFF258EAB)
-                            ),
-                                                  ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Image.asset('assets/images/newroute.png',height: 70,),
+                              Text(
+                              'Find Route',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Color(0xFF258EAB)
+                              ),
+                                                    ),
+                            ],
                           ),
                         
                        

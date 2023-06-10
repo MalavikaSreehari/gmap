@@ -2,14 +2,17 @@ import 'package:farespy/calc_fare.dart';
 import 'package:farespy/paymenttwo.dart';
 import 'package:flutter/material.dart';
 
-class PaymentOne extends StatefulWidget {
-  const PaymentOne({Key? key}) : super(key: key);
+class FareDisplay extends StatefulWidget {
+  final double? distance;
+  
+  const FareDisplay({super.key, this.distance});
+  
 
   @override
-  _PaymentOneState createState() => _PaymentOneState();
+  _FareDisplayState createState() => _FareDisplayState();
 }
 
-class _PaymentOneState extends State<PaymentOne> {
+class _FareDisplayState extends State<FareDisplay> {
   TextEditingController distanceTextEditingController = TextEditingController();
   TextEditingController hrTextEditingController = TextEditingController();
   TextEditingController minTextEditingController = TextEditingController();
@@ -17,17 +20,25 @@ class _PaymentOneState extends State<PaymentOne> {
   double fare = 0.0;
   double waitingCharge = 0.0;
   double totalFare = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Assign the distance from the widget to a local variable
+    double distance = double.tryParse(widget.distance!.toStringAsFixed(2)) ?? 0.0;
+   
+  }
   
 
   void updateFares() {
-  double distance = double.tryParse(distanceTextEditingController.text) ?? 0;
+  //double distance = double.tryParse(distanceTextEditingController.text) ?? 0;
   double hr = double.tryParse(hrTextEditingController.text) ?? 0;
   double min = double.tryParse(minTextEditingController.text) ?? 0;
 
   setState(() {
-    fare = calculateFare(distance);
+    fare = calculateFare(widget.distance!);
     waitingCharge = calculateWaitingCharge(hr, min);
-    totalFare = calculateTotalFare(distance, hr, min);
+    totalFare = calculateTotalFare(widget.distance!, hr, min);
   });
 }
 
@@ -120,32 +131,7 @@ class _PaymentOneState extends State<PaymentOne> {
                         'Distance',
                         style: TextStyle(fontSize: 15),
                       ),
-                      Row(
-                        children: [
-                          Container(
-                            //color: Colors.blueAccent,
-                            height: 30,
-                            width: 100,
-                            child: TextField(
-                              
-                              controller: distanceTextEditingController,
-                              keyboardType: TextInputType.numberWithOptions(),
-                              decoration: InputDecoration(border: OutlineInputBorder(),),
-                              style: TextStyle(
-                                color: Color(0xFF258EAB), // set the text color to blue
-                                fontSize: 24, // set the font size
-                                fontWeight: FontWeight.bold, // set the font weight
-                              ),
-                              onChanged: (value) => updateFares(),
-                            ),
-                          ),
-                          Text('km',style: TextStyle(
-                                color: Color(0xFF258EAB), // set the text color to blue
-                                fontSize: 24, // set the font size
-                                fontWeight: FontWeight.bold, // set the font weight
-                              ),)
-                        ],
-                      ),
+                      Text(widget.distance!.toStringAsFixed(2) + ' km',style: TextStyle(color:  Color(0xFF258EAB),fontSize: 24,fontWeight: FontWeight.bold,),),
                     ],
                   ),
                   const Padding(padding: EdgeInsets.only(right: 50)),
@@ -163,12 +149,13 @@ class _PaymentOneState extends State<PaymentOne> {
                         style: TextStyle(fontSize: 15),
                       ),
                       Text(
-                        '\u{20B9}${calculateFare(double.tryParse(distanceTextEditingController.text) ?? 0,).toStringAsFixed(2)}',
+                        '\u{20B9}${calculateFare(widget.distance!).toStringAsFixed(2)}',
                         style: TextStyle(
                           color: Color(0xFF258EAB), // set the text color to blue
                           fontSize: 24, // set the font size
                           fontWeight: FontWeight.bold, // set the font weight
                         ),
+                        
                       ),
                     ],
                   )
@@ -299,7 +286,7 @@ class _PaymentOneState extends State<PaymentOne> {
                 ],
               ),
               Text(
-                '\u{20B9}'+ totalFare.toStringAsFixed(2),
+                '\u{20B9}${calculateTotalFare(widget.distance!, double.tryParse(hrTextEditingController.text) ?? 0,double.tryParse(minTextEditingController.text) ?? 0).toStringAsFixed(2)}',
                 style: TextStyle(
                   color: Color(0xFF258EAB),
                   fontSize: 48,
